@@ -4,13 +4,15 @@ import User from "../models/user.js";
 import bcrypt from "bcryptjs";
 
 export const register = async (req, res, next) => {
+
   console.log(req.body); // Log the entire request body
 
-  const { username, password, role, data } = req.body;
-
+  const { firstname, lastname, username, password, role, data } = req.body;
+  console.log("username:", username, "password:", password, "role:", role);
   // Check if the user already exists
+const fullName = firstname + " " + lastname;
 
-  const existingUser = await User.findOne({ where: { username } });
+  const existingUser = await User.findOne({ where: {username } });
   if (existingUser) {
     return res.status(400).json({ message: "Username already taken" });
   }
@@ -21,6 +23,7 @@ export const register = async (req, res, next) => {
   // Create the new user
   try {
     const newUser = await User.create({
+      name: fullName,
       username,
       password: hashedPassword,
       role,
@@ -37,11 +40,13 @@ export const register = async (req, res, next) => {
         expiresIn: "1h",
       }
     );
+    console.log("created");
     res.status(200).json({
       message: "User created successfully",
       token,
       username: newUser.username,
       role: newUser.role,
+      id: newUser.id,
     });
   } catch (error) {
     console.error(error);
@@ -50,15 +55,18 @@ export const register = async (req, res, next) => {
 };
 export const login = async (req, res, next) => {
   const { username, password } = req.body;
+  console.log(username, password);
 
   try {
-    const existingUser = await User.findOne({ where: { username: username } });
+    const existingUser = await User.findOne({ where:{username} });
     if (!existingUser) {
+      console.log("no user");
       return next(new HttpError("user not found", 500));
     }
 
     let validPassword = await bcrypt.compare(password, existingUser.password);
     if (!validPassword) {
+      console.log("wrong password");
       return next(new HttpError("wrong password", 500));
     }
     const token = jwt.sign(
@@ -72,12 +80,14 @@ export const login = async (req, res, next) => {
         expiresIn: "1h",
       }
     );
+    console.log(token);
     res.status(200).json({
       message: "successfully logged in",
       token,
       username: existingUser.username,
       role: existingUser.role,
       data: existingUser.data,
+      id: existingUser.id,
     });
   } catch (err) {
     console.error(err);

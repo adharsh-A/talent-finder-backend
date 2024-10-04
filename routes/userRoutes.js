@@ -12,5 +12,5 @@ router.get("/", getAllUsers);
 router.get("/:id", getUserById);
 router.post("/talent", userProfile);
 router.put("/talent/:id", deleteUser);
-router.patch("/talent/:id", updateUserProfile);
+router.put("/update-talent/:id", updateUserProfile);
 export default router;

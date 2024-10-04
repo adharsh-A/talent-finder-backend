@@ -80,25 +80,35 @@ export const searchByData = async (req, res) => {
       .json({ error: "An error occurred while searching for users." });
   }
 };
-
-// Update user profile
 export const updateUserProfile = async (req, res) => {
-  const { data } = req.body; // Extract 'data' from request body
-  const userId = req.params.id; // Get user ID from request parameters
+  const { id } = req.params;
+  console.log(id);
+  console.log(req.body);
+
+  const { skills, occupation, experience, portfolio, additionalInfo } = req.body;
+
+  const updatedata = {
+    skills,
+    occupation,
+    experience,
+    portfolio,
+    additionalInfo,
+  };
 
   try {
     // Check if the user exists
-    const userExists = await User.findOne({ where: { id: userId } });
+    const userExists = await User.findOne({ where: { id: id } });
+    console.log("userExists:", userExists);
     if (!userExists) {
       return res.status(404).json({ message: "User not found." });
     }
 
     // Update the user and get the count and updated user data
     const [updatedCount, updatedUsers] = await User.update(
-      { data },
+      {data: updatedata}, // Update fields directly without wrapping in 'data'
       {
-        where: { id: userId },
-        returning: true, // This option should be included here
+        where: { id: id }, // Fix typo here
+        returning: true, // Return the updated user(s)
       }
     );
 
@@ -106,7 +116,7 @@ export const updateUserProfile = async (req, res) => {
     if (updatedCount === 0) {
       return res
         .status(404)
-        .json({ message: "User not found or no changes made." });
+        .json({ message: "No changes made to the user." });
     }
 
     // Log updated user information
@@ -114,7 +124,7 @@ export const updateUserProfile = async (req, res) => {
 
     return res.status(200).json({
       message: "User updated successfully.",
-      data: updatedUsers[0].data, // Return the first updated user
+      data: updatedUsers[0], // Return the first updated user
     });
   } catch (err) {
     return res.status(500).json({
