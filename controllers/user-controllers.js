@@ -86,9 +86,9 @@ export const updateUserProfile = async (req, res) => {
   console.log(req.body);
 
   const { skills, occupation, experience, portfolio, additionalInfo } = req.body;
-
+  const skillsArray = skills.split(",").map((skill) => skill.trim());
   const updatedata = {
-    skills,
+    skills: skillsArray,
     occupation,
     experience,
     portfolio,
@@ -121,7 +121,7 @@ export const updateUserProfile = async (req, res) => {
 
     // Log updated user information
     console.log(updatedUsers); // Log the array of updated users
-
+    console.log("user updated");
     return res.status(200).json({
       message: "User updated successfully.",
       data: updatedUsers[0], // Return the first updated user
