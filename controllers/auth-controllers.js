@@ -80,7 +80,7 @@ export const login = async (req, res, next) => {
         expiresIn: "1h",
       }
     );
-    console.log(token);
+    console.log(existingUser);
     res.status(200).json({
       message: "successfully logged in",
       token,

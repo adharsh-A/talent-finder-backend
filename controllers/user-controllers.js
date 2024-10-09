@@ -2,20 +2,35 @@ import HttpError from "../models/http-error.js";
 import User from "../models/user.js";
 
 export const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.findAll({
-      attributes: ["id", "username", "role"], // Only return these columns
-    });
-    res.status(200).json(users);
-  } catch (err) {
-    res.status(500).json(err);
-  }
+  const { page, limit } = req.query;
+  const skip = (page - 1) * limit;
+  const users = await User.findAll({
+    offset: skip, // skip equivalent in Sequelize
+    limit: Number(limit) // limit equivalent in Sequelize
+  });
+  
+  const total = await User.count(); // Count the total number of users
+  
+  res.json({
+    total,
+    page: Number(page),
+    totalPages: Math.ceil(total / limit),
+    users
+  });
+  // try {
+  //   const users = await User.findAll({
+  //     attributes: ["id", "username", "role","data","name"], // Only return these columns
+  //   });
+  //   res.status(200).json(users);
+  // } catch (err) {
+  //   res.status(500).json(err);
+  // }
 };
 
 export const getUserById = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id, {
-      attributes: ["id", "username", "role"], // Only return these columns
+      attributes: {exclude: ["password"]}, // Only return these columns
     });
     res.status(200).json(user);
   } catch (err) {
@@ -23,16 +38,6 @@ export const getUserById = async (req, res) => {
   }
 };
 
-export const userProfile = async (req, res) => {
-  const { data } = req.body;
-
-  try {
-    const user = await User.update({ data }, { where: { id: req.params.id } });
-    res.status(200).json(user);
-  } catch (err) {
-    res.status(500).json(err);
-  }
-};
 
 export const deleteUser = async (req, res) => {
   try {
@@ -57,7 +62,7 @@ export const searchUser = async (req, res) => {
   }
 };
 export const searchByData = async (req, res) => {
-  const { data } = req.query;
+  const { data } = req.body;
 
   try {
     // Assuming 'data' is a JSON column and we want to match against specific keys

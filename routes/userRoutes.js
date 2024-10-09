@@ -5,12 +5,10 @@ import {
   getAllUsers,
   getUserById,
   updateUserProfile,
-  userProfile,
 } from "../controllers/user-controllers.js";
 //api/users
 router.get("/", getAllUsers);
 router.get("/:id", getUserById);
-router.post("/talent", userProfile);
-router.put("/talent/:id", deleteUser);
+router.put("/talent/:id", deleteUser);//remain
 router.put("/update-talent/:id", updateUserProfile);
 export default router;
