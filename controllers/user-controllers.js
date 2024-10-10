@@ -1,4 +1,5 @@
 import HttpError from "../models/http-error.js";
+import { Op } from "sequelize";
 import User from "../models/user.js";
 
 export const getAllUsers = async (req, res) => {
@@ -61,30 +62,62 @@ export const searchUser = async (req, res) => {
     res.status(500).json(err);
   }
 };
+
+//search-data
 export const searchByData = async (req, res) => {
-  const { data } = req.body;
+  const { name, occupation, skills, experience } = req.body;
 
   try {
-    // Assuming 'data' is a JSON column and we want to match against specific keys
+    const whereConditions = [];
+
+    // Filter by name (case-insensitive search)
+    if (name) {
+      whereConditions.push({
+        name: {
+          [Op.like]: `%${name}%`, // Case-insensitive partial match
+        },
+      });
+    }
+
+    // Filter by occupation (in the data JSON object)
+    if (occupation) {
+      whereConditions.push({
+        "data.occupation": {
+          [Op.like]: `%${occupation}%`, // Case-insensitive partial match
+        },
+      });
+    }
+
+    // Filter by experience (exact match or partial, depending on your needs)
+    if (experience) {
+      whereConditions.push({
+        "data.experience": experience, // Exact match (adjust if you need partial match)
+      });
+    }
+
+    // Filter by skills (assuming skills is an array and you're looking for a match in any of the skills)
+    if (skills) {
+      whereConditions.push({
+        "data.skills": {
+          [Op.contains]: [skills], // Checks if skills array contains the provided skill
+        },
+      });
+    }
+    // Combine all conditions using Op.and to ensure all filters apply
     const users = await User.findAll({
       where: {
-        [Op.or]: [
-          { "data.skills": { [Op.like]: `%${data}%` } },
-          { "data.experience": { [Op.like]: `%${data}%` } }, // Replace with actual key
-          { "data.education": { [Op.like]: `%${data}%` } }, // Replace with actual key
-          // Add more keys as needed
-        ],
+        [Op.and]: whereConditions,
       },
     });
-
+    // Return the filtered users
     res.status(200).json(users);
-  } catch (err) {
-    console.error(err); // Log error for debugging
-    res
-      .status(500)
-      .json({ error: "An error occurred while searching for users." });
+  } catch (error) {
+    console.error("Error searching users:", error);
+    res.status(500).json({ message: 'Server error while searching users' });
   }
 };
+
+
 export const updateUserProfile = async (req, res) => {
   const { id } = req.params;
   console.log(id);
@@ -92,6 +125,7 @@ export const updateUserProfile = async (req, res) => {
 
   const { skills, occupation, experience, portfolio, additionalInfo } = req.body;
   const skillsArray = skills.split(",").map((skill) => skill.trim());
+  
   const updatedata = {
     skills: skillsArray,
     occupation,
