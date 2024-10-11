@@ -39,7 +39,6 @@ export const getUserById = async (req, res) => {
   }
 };
 
-
 export const deleteUser = async (req, res) => {
   try {
     const user = await User.destroy({ where: { id: req.params.id } });
@@ -63,9 +62,25 @@ export const searchUser = async (req, res) => {
   }
 };
 
-//search-data
+
 export const searchByData = async (req, res) => {
-  const { name, occupation, skills, experience } = req.body;
+  // Destructure with default values
+  const { name, occupation, skills, experience, limit, currentPage} = req.body;
+  console.log("data received:", name, occupation, skills, experience, limit, currentPage);
+
+  // Validate limit and currentPage to ensure they are numbers
+  const parsedLimit = Number(limit);
+  const parsedCurrentPage = Number(currentPage);
+
+  console.log(limit);
+  console.log(currentPage);
+  // Check if the parsed values are valid
+  if (isNaN(parsedLimit) || parsedLimit <= 0) {
+    return res.status(400).json({ message: "Limit must be a positive number." });
+  }
+  if (isNaN(parsedCurrentPage) || parsedCurrentPage <= 0) {
+    return res.status(400).json({ message: "Current page must be a positive number." });
+  }
 
   try {
     const whereConditions = [];
@@ -103,14 +118,25 @@ export const searchByData = async (req, res) => {
         },
       });
     }
+
+    // Calculate offset for pagination
+    const offset = (parsedCurrentPage - 1) * parsedLimit;
+
     // Combine all conditions using Op.and to ensure all filters apply
-    const users = await User.findAll({
+    const { count, rows } = await User.findAndCountAll({
       where: {
         [Op.and]: whereConditions,
       },
+      limit: parsedLimit, // Limit for pagination
+      offset: isNaN(offset) ? 0 : offset
     });
-    // Return the filtered users
-    res.status(200).json(users);
+
+    // Return the filtered users along with pagination info
+    res.status(200).json({
+      totalPages: Math.ceil(count / parsedLimit), // Calculate total pages
+      currentPage: Number(parsedCurrentPage),
+      users: rows,
+    });
   } catch (error) {
     console.error("Error searching users:", error);
     res.status(500).json({ message: 'Server error while searching users' });
@@ -172,3 +198,45 @@ export const updateUserProfile = async (req, res) => {
     });
   }
 };
+
+export const updateProfile=async(req,res)=>{
+  const {id}=req.params;
+  const {name,username,skills,occupation,experience,portfolio,additionalInfo}=req.body;
+const updatedata={
+  name,
+  username,
+  skills,
+  occupation,
+  experience,
+  portfolio,
+  additionalInfo,
+}
+  try{
+    const userExists=await User.findOne({where:{id:id}});
+    if(!userExists){
+      return res.status(404).json({message:"User not found."});
+    }
+    const [updatedCount,updatedUsers]=await User.update(updatedata, 
+      {
+        where: { id: id }, // Fix typo here
+        returning: true, // Return the updated user(s)
+      }
+    );
+    if (updatedCount === 0) {
+      return res
+        .status(404)
+        .json({ message: "No changes made to the user." });
+    }
+    console.log(updatedUsers);
+    return res.status(200).json({
+      message: "User updated successfully.",
+      data: updatedUsers[0], // Return the first updated user
+    });
+  }catch(err){
+    return res.status(500).json({
+      error: "Internal server error",
+      details: err.message, // Return the error message
+    });
+  }
+
+}
