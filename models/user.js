@@ -6,6 +6,10 @@ const User = sequelize.define("User", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  image: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   username: { 
     type: DataTypes.STRING,
     allowNull: false,
@@ -18,7 +22,7 @@ const User = sequelize.define("User", {
   role: {
     type: DataTypes.STRING,
     allowNull: false,
-    defaultValue: "user",
+    defaultValue: "talent",
   },
   data: {
     type: DataTypes.JSON,

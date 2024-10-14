@@ -7,6 +7,7 @@ configDotenv();
 //   dialect: 'postgres',
 // });
 const urlofvercel = process.env.DATABASE_URL;
+console.log(urlofvercel);
 //second way with conncetion string
 const sequelize = new Sequelize(urlofvercel, {
   dialect: "postgres",

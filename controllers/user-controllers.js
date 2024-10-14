@@ -3,21 +3,30 @@ import { Op } from "sequelize";
 import User from "../models/user.js";
 
 export const getAllUsers = async (req, res) => {
-  const { page, limit } = req.query;
+  const { page, limit } = req.query; // Default values for page and limit
   const skip = (page - 1) * limit;
-  const users = await User.findAll({
-    offset: skip, // skip equivalent in Sequelize
-    limit: Number(limit) // limit equivalent in Sequelize
-  });
-  
-  const total = await User.count(); // Count the total number of users
-  
-  res.json({
-    total,
-    page: Number(page),
-    totalPages: Math.ceil(total / limit),
-    users
-  });
+
+  try {
+    // Use Promise.all to run both queries concurrently
+    const [users, total] = await Promise.all([
+      User.findAll({
+        where: { role: "talent" },
+        offset: skip,
+        limit: Number(limit),
+      }),
+      User.count({ where: { role: "talent" } }), // Count only users with role 'user'
+    ]);
+
+    res.json({
+      total,
+      page: Number(page),
+      totalPages: Math.ceil(total / limit),
+      users,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch users" });
+  }
+};
   // try {
   //   const users = await User.findAll({
   //     attributes: ["id", "username", "role","data","name"], // Only return these columns
@@ -26,12 +35,12 @@ export const getAllUsers = async (req, res) => {
   // } catch (err) {
   //   res.status(500).json(err);
   // }
-};
+
 
 export const getUserById = async (req, res) => {
   try {
     const user = await User.findByPk(req.params.id, {
-      attributes: {exclude: ["password"]}, // Only return these columns
+      attributes: { exclude: ["password"] }, // Only return these columns
     });
     res.status(200).json(user);
   } catch (err) {
@@ -62,11 +71,18 @@ export const searchUser = async (req, res) => {
   }
 };
 
-
 export const searchByData = async (req, res) => {
   // Destructure with default values
-  const { name, occupation, skills, experience, limit, currentPage} = req.body;
-  console.log("data received:", name, occupation, skills, experience, limit, currentPage);
+  const { name, occupation, skills, experience, limit, currentPage } = req.body;
+  console.log(
+    "data received:",
+    name,
+    occupation,
+    skills,
+    experience,
+    limit,
+    currentPage
+  );
 
   // Validate limit and currentPage to ensure they are numbers
   const parsedLimit = Number(limit);
@@ -76,14 +92,19 @@ export const searchByData = async (req, res) => {
   console.log(currentPage);
   // Check if the parsed values are valid
   if (isNaN(parsedLimit) || parsedLimit <= 0) {
-    return res.status(400).json({ message: "Limit must be a positive number." });
+    return res
+      .status(400)
+      .json({ message: "Limit must be a positive number." });
   }
   if (isNaN(parsedCurrentPage) || parsedCurrentPage <= 0) {
-    return res.status(400).json({ message: "Current page must be a positive number." });
+    return res
+      .status(400)
+      .json({ message: "Current page must be a positive number." });
   }
 
   try {
     const whereConditions = [];
+    whereConditions.push({ role: "talent" });
 
     // Filter by name (case-insensitive search)
     if (name) {
@@ -128,7 +149,7 @@ export const searchByData = async (req, res) => {
         [Op.and]: whereConditions,
       },
       limit: parsedLimit, // Limit for pagination
-      offset: isNaN(offset) ? 0 : offset
+      offset: isNaN(offset) ? 0 : offset,
     });
 
     // Return the filtered users along with pagination info
@@ -139,26 +160,44 @@ export const searchByData = async (req, res) => {
     });
   } catch (error) {
     console.error("Error searching users:", error);
-    res.status(500).json({ message: 'Server error while searching users' });
+    res.status(500).json({ message: "Server error while searching users" });
   }
 };
-
 
 export const updateUserProfile = async (req, res) => {
   const { id } = req.params;
   console.log(id);
   console.log(req.body);
 
-  const { skills, occupation, experience, portfolio, additionalInfo } = req.body;
+  const { skills, occupation, experience, portfolio, additionalInfo,role,
+    clientCompany,
+    companyLocation,
+    clientContactEmail,
+    clientWebsite,
+    clientContactPhone, } =
+    req.body;
+
+    let updatedata;
+    if(!role==="client"){
   const skillsArray = skills.split(",").map((skill) => skill.trim());
-  
-  const updatedata = {
+
+  updatedata = {
     skills: skillsArray,
     occupation,
     experience,
     portfolio,
     additionalInfo,
-  };
+  };}
+  else{
+    updatedata = {
+      clientCompany,
+      companyLocation,
+      clientContactEmail,
+      clientWebsite,
+      clientContactPhone
+    };
+  }
+
 
   try {
     // Check if the user exists
@@ -170,7 +209,7 @@ export const updateUserProfile = async (req, res) => {
 
     // Update the user and get the count and updated user data
     const [updatedCount, updatedUsers] = await User.update(
-      {data: updatedata}, // Update fields directly without wrapping in 'data'
+      { data: updatedata }, // Update fields directly without wrapping in 'data'
       {
         where: { id: id }, // Fix typo here
         returning: true, // Return the updated user(s)
@@ -179,9 +218,7 @@ export const updateUserProfile = async (req, res) => {
 
     // Check if the update was successful
     if (updatedCount === 0) {
-      return res
-        .status(404)
-        .json({ message: "No changes made to the user." });
+      return res.status(404).json({ message: "No changes made to the user." });
     }
 
     // Log updated user information
@@ -199,44 +236,48 @@ export const updateUserProfile = async (req, res) => {
   }
 };
 
-export const updateProfile=async(req,res)=>{
-  const {id}=req.params;
-  const {name,username,skills,occupation,experience,portfolio,additionalInfo}=req.body;
-const updatedata={
-  name,
-  username,
-  skills,
-  occupation,
-  experience,
-  portfolio,
-  additionalInfo,
-}
-  try{
-    const userExists=await User.findOne({where:{id:id}});
-    if(!userExists){
-      return res.status(404).json({message:"User not found."});
+export const updateProfile = async (req, res) => {
+  const { id } = req.params;
+  const {
+    name,
+    username,
+    skills,
+    occupation,
+    experience,
+    portfolio,
+    additionalInfo,
+  } = req.body;
+  const skillsArray = skills.split(",").map((skill) => skill.trim());
+  const updatedata = {
+    name,
+    username,
+    skills: skillsArray,
+    occupation,
+    experience,
+    portfolio,
+    additionalInfo,
+  };
+  try {
+    const userExists = await User.findOne({ where: { id: id } });
+    if (!userExists) {
+      return res.status(404).json({ message: "User not found." });
     }
-    const [updatedCount,updatedUsers]=await User.update(updatedata, 
-      {
-        where: { id: id }, // Fix typo here
-        returning: true, // Return the updated user(s)
-      }
-    );
+    const [updatedCount, updatedUsers] = await User.update(updatedata, {
+      where: { id: id }, // Fix typo here
+      returning: true, // Return the updated user(s)
+    });
     if (updatedCount === 0) {
-      return res
-        .status(404)
-        .json({ message: "No changes made to the user." });
+      return res.status(404).json({ message: "No changes made to the user." });
     }
     console.log(updatedUsers);
     return res.status(200).json({
       message: "User updated successfully.",
       data: updatedUsers[0], // Return the first updated user
     });
-  }catch(err){
+  } catch (err) {
     return res.status(500).json({
       error: "Internal server error",
       details: err.message, // Return the error message
     });
   }
-
-}
+};

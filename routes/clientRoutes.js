@@ -10,7 +10,7 @@ import { searchUser, searchByData } from "../controllers/user-controllers.js";
 ///api/client
 router.get("/", getAllClients);
 router.get("/:id", getClientById);
-router.post("/client", clientProfile);
+router.put("/:id", clientProfile);
 router.post("/search", searchUser);
 router.post("/search-data", searchByData);
 
