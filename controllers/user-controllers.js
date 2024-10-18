@@ -3,7 +3,7 @@ import { Op } from "sequelize";
 import User from "../models/user.js";
 
 export const getAllUsers = async (req, res) => {
-  const { page, limit } = req.query; // Default values for page and limit
+  const { page=1, limit=3 } = req.query; // Default values for page and limit
   const skip = (page - 1) * limit;
 
   try {
