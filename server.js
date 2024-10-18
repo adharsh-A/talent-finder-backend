@@ -11,14 +11,16 @@ process.on("uncaughtException", (err) => {
 // Sync Database
 const startServer = async () => {
   try {
-    await sequelize.authenticate(); // Ensures the database connection is valid
-    await sequelize.sync(); // Sync the database and create tables if they don't exist
-    console.log("Database connected and synced successfully!");
+    await sequelize.authenticate(); // Validate DB connection
+    console.log("Database connected successfully.");
+    await sequelize.sync(); // Sync the database
+    console.log("Database synced successfully!");
   } catch (error) {
-    console.error("Error syncing the database:", error);
+    console.error("Error during database connection/sync:", error);
     process.exit(1); // Exit process if database sync fails
   }
 };
+
 
 startServer();
 
