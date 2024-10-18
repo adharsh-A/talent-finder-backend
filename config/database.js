@@ -9,9 +9,17 @@ configDotenv();
 const urlofvercel = process.env.DATABASE_URL;
 console.log(urlofvercel);
 //second way with conncetion string
-const sequelize = new Sequelize(urlofvercel, {
-  dialect: "postgres",
+const sequelize = new Sequelize(process.env.DATABASE_URL, {
+  dialect: 'postgres',
+  protocol: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false,  // Optional: depends on your SSL setup
+    },
+  },
 });
+
 
 //test connection
 async function testConnection() {
