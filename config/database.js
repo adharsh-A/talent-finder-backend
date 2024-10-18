@@ -6,6 +6,7 @@ configDotenv();
 //   host: process.env.DB_HOST,
 //   dialect: 'postgres',
 // });
+
 const urlofvercel = process.env.DATABASE_URL;
 console.log(urlofvercel);
 //second way with conncetion string
