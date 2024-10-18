@@ -11,16 +11,27 @@ import jobRoutes from "./routes/jobRoutes.js";
 import HttpError from "./models/http-error.js";
 import rateLimiter from "./middleware/rate-limiter.js";
 
+// Load environment variables
 dotenv.config();
 
 const app = express();
-app.use(express.json({ limit: "10mb" })); // For parsing JSON data
-app.use(express.urlencoded({ extended: true })); // For parsing URL-encoded data
-app.disable("x-powered-by");
+
+// Enable trust proxy for rate limiting
+app.set('trust proxy', 1); // Important when behind a proxy
+
+
+// Middleware to parse JSON and URL-encoded data
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+// Security middlewares
+app.disable("x-powered-by"); // Disable 'x-powered-by' header for security
+app.use(helmet()); // Secure headers
+app.use(rateLimiter); // Rate limiter to prevent excessive requests
 
 // CORS configuration
 const corsOptions = {
-  origin: "*", // Allows this specific origin
+  origin: "*", // Adjust as necessary, "*" allows all origins
   methods: ["GET", "POST", "PATCH", "DELETE", "PUT", "OPTIONS"],
   allowedHeaders: [
     "Origin",
@@ -30,21 +41,16 @@ const corsOptions = {
     "Authorization",
   ],
 };
-//rate limiter
-app.use(rateLimiter);
+app.use(cors(corsOptions)); // Enable CORS for all routes
+app.options("*", cors(corsOptions)); // Handle preflight requests
 
-// Handle preflight requests for all routes
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // This enables the server to respond to the preflight requests with appropriate CORS headers
-
-//prevent xss attacksand clickjacking
-app.use(helmet());
-
+// Serve static files from 'public' directory
 app.use(express.static("public"));
 
+// Routes
 app.get("/", (req, res) => {
-  console.log("working");
   res.send("Hello World!");
+  console.log("Root route accessed.");
 });
 
 app.use("/api/auth", authRoutes);
@@ -52,15 +58,15 @@ app.use("/api/users", userRoutes);
 app.use("/api/client", clientRoutes);
 app.use("/api/jobs", jobRoutes);
 
-//invalid route
+// Handle invalid routes (404)
 app.use((req, res, next) => {
   const error = new HttpError("Could not find this route.", 404);
   return next(error);
 });
 
-//error handler
+// Global error handling middleware
 app.use((error, req, res, next) => {
-  if (res.headerSent) {
+  if (res.headersSent) {
     return next(error);
   }
   res.status(error.code || 500);
