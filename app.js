@@ -10,11 +10,15 @@ import jobRoutes from "./routes/jobRoutes.js";
 
 import HttpError from "./models/http-error.js";
 import rateLimiter from "./middleware/rate-limiter.js";
+import { responseTimeLogger } from './middleware/responseTimeLogger.js'; // Adjust the path as needed
+
 
 // Load environment variables
 dotenv.config();
 
 const app = express();
+
+app.use(responseTimeLogger);
 
 // Enable trust proxy for rate limiting
 app.set('trust proxy', 1); // Important when behind a proxy

@@ -6,6 +6,7 @@ import {
   getUserById,
   updateUserProfile,
   updateProfile,
+  bulkUploadUsers
 } from "../controllers/user-controllers.js";
 //api/users
 router.get("/", getAllUsers);
@@ -14,4 +15,5 @@ router.put("/talent/:id", deleteUser);//remain
 //put method is used for updating a resource
 router.put("/update-talent/:id", updateUserProfile);
 router.put("/update-profile/:id", updateProfile);
+router.post("/bulk-upload",bulkUploadUsers);
 export default router;

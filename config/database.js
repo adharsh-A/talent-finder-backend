@@ -12,14 +12,23 @@ console.log(urlofvercel);
 //second way with conncetion string
 const sequelize = new Sequelize(process.env.DATABASE_URL, {
   dialect: 'postgres',
-  protocol: 'postgres',
+  ssl: true,
   dialectOptions: {
     ssl: {
       require: true,
-      rejectUnauthorized: false,  // Optional: depends on your SSL setup
-    },
+      rejectUnauthorized: false,
+    }
   },
+  pool: {
+    max: 5,
+    min: 0,
+    acquire: 30000,
+    idle: 10000,
+  },
+  logging: console.log, // Enable SQL logging for debugging
 });
+
+
 
 
 //test connection
