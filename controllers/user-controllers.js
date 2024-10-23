@@ -9,7 +9,7 @@ import NodeCache from "node-cache";
 const userCache = new NodeCache({ stdTTL: 3600 }); // TTL (time to live) in seconds
 
 export const getAllUsers = async (req, res) => {
-  const { page = 1, limit = 3 } = req.query; // Default values for page and limit
+  const { page = 1, limit = 50 } = req.query; // Default values for page and limit
   const skip = (page - 1) * limit;
   const cacheKey = `users_page_${page}_limit_${limit}`; // Unique cache key based on page and limit
 
@@ -271,6 +271,7 @@ export const updateUserProfile = async (req, res) => {
 
 export const updateProfile = async (req, res) => {
   const { id } = req.params;
+  console.log(object);
   const {
     name,
     username,

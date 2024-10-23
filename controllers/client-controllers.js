@@ -28,10 +28,11 @@ export const getClientById = async (req, res) => {
 
 export const clientProfile = async (req, res) => {
   const { name, username, clientCompany, companyLocation, clientContactEmail, clientWebsite, clientContactPhone } = req.body;
-
+  const clientId = Number(req.params.id)
+  console.log(clientId);
   try {
     // Find the existing user data
-    const user = await User.findOne({ where: { id: req.params.id } });
+    const user = await User.findOne({ where: { id: clientId } });
 
     if (!user) {
       return res.status(404).json({ message: "Client not found!" });
@@ -51,7 +52,7 @@ export const clientProfile = async (req, res) => {
     };
 
     // Update the user with merged data
-    const [updated] = await User.update(updatedData, { where: { id: req.params.id } });
+    const [updated] = await User.update(updatedData, { where: { id: clientId } });
 
     // If the update is successful, return the updated client data
     if (updated) {

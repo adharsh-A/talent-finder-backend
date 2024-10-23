@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js"; // Adjust the path
+import Job from "./job.js";
 
 const User = sequelize.define("User", {
   name: {
@@ -29,7 +30,7 @@ const User = sequelize.define("User", {
     type: DataTypes.JSON,
     allowNull: true,
   },
-  // Add any other fields as needed
 });
 
+// Export User model for use in associations
 export default User;

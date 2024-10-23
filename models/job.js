@@ -1,51 +1,62 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database.js"; // Adjust the path
+import User from "./user.js";
 
 const Job = sequelize.define("Job", {
   id: {
     type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4, // Automatically generate UUIDs
+    defaultValue: DataTypes.UUIDV4,
     allowNull: false,
     primaryKey: true,
   },
+  clientId: {
+    type: DataTypes.UUID, // Assuming 'clientId' is a UUID
+    allowNull: false,
+    references: {
+      model: 'User', // Reference to User model
+      key: 'id', // User's primary key
+    },
+    onDelete: 'CASCADE',
+  },
   title: {
     type: DataTypes.STRING,
-    allowNull: false, // Job title cannot be null
+    allowNull: false,
   },
   data: {
     type: DataTypes.JSON,
     allowNull: true,
   },
   description: {
-    type: DataTypes.TEXT, // For longer job descriptions
+    type: DataTypes.TEXT,
     allowNull: false,
   },
   salary: {
-    type: DataTypes.INTEGER, // Salary as an integer (could also be DECIMAL)
-    allowNull: true, // Salary can be NULL
+    type: DataTypes.INTEGER,
+    allowNull: true,
   },
   location: {
     type: DataTypes.STRING,
-    allowNull: false, // Location can be NULL
+    allowNull: false,
   },
   image: {
-    type: DataTypes.STRING, // Store image as a URL or base64-encoded string
-    allowNull: true, // Image can be NULL
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   isRemote: {
-    type: DataTypes.BOOLEAN, // Whether the job is remote or not
-    defaultValue: false, // Default value is false (not remote)
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
   },
   createdAt: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: DataTypes.NOW, // Automatically sets to the current date and time
+    defaultValue: DataTypes.NOW,
   },
   updatedAt: {
     type: DataTypes.DATE,
     allowNull: false,
-    defaultValue: DataTypes.NOW, // Automatically updates on record update
+    defaultValue: DataTypes.NOW,
   },
 });
 
+// Export Job model for use in associations
 export default Job;
