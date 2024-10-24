@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import HttpError from "../models/http-error.js";
 import { Op } from "sequelize";
 import User from "../models/user.js";
+import Sequelize from 'sequelize';
 
 import NodeCache from "node-cache";
 
@@ -139,24 +140,54 @@ export const searchByData = async (req, res) => {
       });
     }
 
-    // Filter by experience (exact match or partial, depending on your needs)
-    if (experience) {
-      whereConditions.push({
-        "data.experience": {
-          [Op.like]: `%${experience}%`, // Matches any record containing the value of experience
-        },
-      });
-    }
-    
-
+    // // Filter by experience (exact match or partial, depending on your needs)
+    // if (experience) {
+    //   whereConditions.push(
+    //     Sequelize.where(
+    //       Sequelize.cast(
+    //         Sequelize.fn(
+    //           'regexp_replace', 
+    //           Sequelize.col('data.experience'), 
+    //           '[^0-9]', '', 'g' // Removes everything except numbers
+    //         ), 
+    //         'INTEGER' // Cast the result to integer
+    //       ),
+    //       {
+    //         [Op.gte]: parseInt(experience), // Compare with the given experience
+    //       }
+    //     )
+    //   );
+    // }
+        // Filter by experience (handling JSON and casting)
+        if (experience) {
+          whereConditions.push(
+            Sequelize.where(
+              Sequelize.cast(
+                Sequelize.fn(
+                  'regexp_replace', 
+                  Sequelize.json('data.experience'), // Access the 'experience' inside the JSON object
+                  '[^0-9]', 
+                  '', 
+                  'g'
+                ),
+                'INTEGER'
+              ),
+              {
+                [Op.gte]: parseInt(experience), // Compare after converting to integer
+              }
+            )
+          );
+        }
+  
     // Filter by skills (assuming skills is an array and you're looking for a match in any of the skills)
     if (skill) {
       whereConditions.push({
         "data.skills": {
-          [Op.overlap]: [skill.toLowerCase()], // Check if the skills array contains the provided skill, ignoring case
+          [Op.iLike]: `%${skill.toLowerCase()}%`, // Case-insensitive match for any part of the skills string
         },
       });
     }
+    
     
 
     // Calculate offset for pagination

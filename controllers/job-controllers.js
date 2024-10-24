@@ -51,7 +51,7 @@ export const getJobById = async (req, res) => {
 
 export const createJob = async (req, res) => {
   try {
-    const { clientId, title, data, description, salary, location, image, isRemote } = req.body;
+    const { clientId, title, skills,experience, description, salary, location, image, isRemote } = req.body;
 
     // Validate required fields
     if (!clientId || !title || !description || !location) {
@@ -64,14 +64,16 @@ export const createJob = async (req, res) => {
     const job = await Job.create({
       clientId,
       title,
-      data,
+      data: { // Assuming `data` is a JSON or JSONB column in your Sequelize model
+        skills,
+        experience
+      },
       description,
       salary,
       location,
       image,
       isRemote,
     });
-
     res.status(201).json(job);
   } catch (err) {
     console.error("Error creating job:", err); // Log the error for debugging
