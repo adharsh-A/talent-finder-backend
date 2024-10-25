@@ -13,7 +13,7 @@ const Job = sequelize.define("Job", {
     type: DataTypes.UUID, // Assuming 'clientId' is a UUID
     allowNull: false,
     references: {
-      model: 'User', // Reference to User model
+      model: 'Users', // Reference to User model
       key: 'id', // User's primary key
     },
     onDelete: 'CASCADE',
@@ -56,6 +56,8 @@ const Job = sequelize.define("Job", {
     allowNull: false,
     defaultValue: DataTypes.NOW,
   },
+}, {
+  tableName: 'Jobs',
 });
 
 // Export Job model for use in associations

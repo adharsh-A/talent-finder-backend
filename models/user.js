@@ -30,6 +30,8 @@ const User = sequelize.define("User", {
     type: DataTypes.JSON,
     allowNull: true,
   },
+}, {
+  tableName: 'Users',
 });
 
 // Export User model for use in associations

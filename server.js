@@ -46,6 +46,7 @@ import dotenv from "dotenv";
 import sequelize from "./config/database.js"; // Adjust the path as needed
 import User from "./models/user.js";
 import Job from "./models/job.js";
+import JobApplication from "./models/job-application.js";
 import './models/associations.js'; // Import associations after models
 
 dotenv.config();
@@ -71,8 +72,8 @@ const port = process.env.PORT || 8080;
 
 const startServer = async () => {
   try {
-    // Syncing the database
-    await sequelize.sync({ force: false });
+    await sequelize.sync({ force: false, alter: true });
+
     console.log('Database & tables created!');
 
     // Start the server after syncing the database
