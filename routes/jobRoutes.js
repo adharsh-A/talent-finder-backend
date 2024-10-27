@@ -22,9 +22,9 @@ router.put("/:id", updateJob);
 router.delete("/:id", deleteJob);
 
 router.post('/:jobId/apply', applyJob);
-router.get("/applications/:id", getApplicationsByJobId);
+router.get("/applications/:jobId", getApplicationsByJobId);
 router.get("/applications-user/:userId", getApplicationsByUserId);
-router.put("/status", updateStatus);
+router.put("/application/status", updateStatus);
 router.delete("/application/delete", deleteApplication);
 router.get("/client/:clientId", getJobsByClientId);
 export default router;

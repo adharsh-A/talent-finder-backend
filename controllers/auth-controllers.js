@@ -37,7 +37,7 @@ const fullName = firstname + " " + lastname;
       },
       process.env.JWT_KEY,
       {
-        expiresIn: "1h",
+        expiresIn: "24h",
       }
     );
     console.log("created");
@@ -77,7 +77,7 @@ export const login = async (req, res, next) => {
       },
       process.env.JWT_KEY,
       {
-        expiresIn: "1h",
+        expiresIn: "24h",
       }
     );
     console.log(existingUser);

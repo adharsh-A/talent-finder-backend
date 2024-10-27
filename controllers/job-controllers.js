@@ -210,22 +210,28 @@ export const getApplicationsByUserId = async (req, res) => {
   }
 
 }
-
 export const updateStatus = async (req, res) => {
   try {
-    const { jobId, userId, status } = req.body;
-    const application = await JobApplication.findOne({ where: { jobId, userId } });
+    const { applicationId, status } = req.body;
+
+    // Find the application by its ID
+    const application = await JobApplication.findOne({ where: { id: applicationId } });
+
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
     }
+
+    // Update the application status
     application.status = status;
     await application.save();
+
     res.status(200).json({ message: "Application status updated successfully" });
   } catch (err) {
     res.status(500).json({ message: "Internal server error", error: err });
     console.log(err);
   }
-}
+};
+
 export const deleteApplication = async (req, res) => {
   try {
     const { applicationId } = req.query;
@@ -253,4 +259,4 @@ export const getJobsByClientId = async (req, res) => {
   } catch (err) {
     res.status(500).json(err);
   }
-}
+}   
