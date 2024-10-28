@@ -52,9 +52,16 @@ app.options("*", cors(corsOptions)); // Handle preflight requests
 app.use(express.static("public"));
 
 // Routes
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-  console.log("Root route accessed.");
+
+app.get("/test", (req, res) => {
+  try {
+    
+    res.send("Test endpoint is working");
+    console.log("root route accepted");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
 });
 
 app.use("/api/auth", authRoutes);
