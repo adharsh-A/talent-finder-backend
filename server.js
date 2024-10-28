@@ -95,7 +95,7 @@
 
 // startServer();
 // server.js
-iimport app from './app.js';
+import app from './app.js';
 import dotenv from 'dotenv';
 import { sequelize, connectDatabase } from './config/database.js';
 import './models/associations.js'; // Load associations after database initialization
