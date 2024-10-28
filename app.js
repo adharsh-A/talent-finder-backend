@@ -63,6 +63,16 @@ app.get("/test", (req, res) => {
     res.status(500).send("Internal Server Error");
   }
 });
+app.get("/", (req, res) => {
+  try {
+    
+    res.send("Test endpoint is working");
+    console.log("root route accepted");
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  }
+});
 
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
