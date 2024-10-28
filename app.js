@@ -19,6 +19,12 @@ dotenv.config();
 
 const app = express();
 
+// Enable 'trust proxy' for the app
+// Trust only the first proxy (usually sufficient for a setup with a single proxy/load balancer)
+app.set('trust proxy', 1); // Trust the first proxy
+
+// OR, if you know the specific proxy IPs, you can specify those
+app.set('trust proxy', 'loopback'); // Only trust localhost (for development)
 // Middleware to parse JSON and URL-encoded data
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
