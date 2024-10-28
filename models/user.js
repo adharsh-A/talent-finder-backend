@@ -2,6 +2,7 @@ import { DataTypes } from "sequelize";
 import {sequelize} from "../config/database.js"; // Adjust the path
 import Job from "./job.js";
 
+
 const User = sequelize.define("User", {
   name: {
     type: DataTypes.STRING,
