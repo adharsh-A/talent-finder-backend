@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.BACKEND_URL_FOR_TALENT;
 
 if (!databaseUrl) {
   throw new Error("DATABASE_URL is not defined in environment variables");
