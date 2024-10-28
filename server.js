@@ -95,52 +95,53 @@
 
 // startServer();
 // server.js
-import app from "./app.js";
-import dotenv from "dotenv";
-import { sequelize, connectDatabase } from "./config/database.js";
-import './models/associations.js'; // Make sure associations are loaded after database initialization
+iimport app from './app.js';
+import dotenv from 'dotenv';
+import { sequelize, connectDatabase } from './config/database.js';
+import './models/associations.js'; // Load associations after database initialization
 
 dotenv.config();
 
 const startServer = async () => {
   try {
-    // Only sync in development
+    // Sync the database tables (only in non-production environments, if needed)
     if (process.env.NODE_ENV !== 'production') {
       await sequelize.sync({ force: false, alter: false });
       console.log('Database & tables created!');
     }
-    await connectDatabase();  // This ensures that the database connection is made once when the server starts
 
     // Connect to the database (one-time initialization)
+    await connectDatabase();
 
-    if (process.env.NODE_ENV !== 'production') {
-      const port = process.env.PORT || 3000;
-      const server = app.listen(port, () => {
-        console.log(`Server is working on port ${port}`);
+    // Set the port to Render's dynamic port or default to 3000 locally
+    const port = process.env.PORT || 3000;
+    const server = app.listen(port, () => {
+      console.log(`Server is running on port ${port}`);
+    });
+
+    // Graceful shutdown process
+    const shutdown = async () => {
+      console.log('Received shutdown signal, closing server...');
+      await sequelize.close();  // Close the database connection
+      server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
       });
+    };
 
-      // Graceful shutdown
-      const shutdown = async () => {
-        console.log('Received shutdown signal');
-        await sequelize.close();  // Close the database connection
-        server.close(() => {
-          console.log('Server closed');
-          process.exit(0);
-        });
-      };
+    // Handle shutdown signals
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
 
-      process.on('SIGTERM', shutdown);
-      process.on('SIGINT', shutdown);
-      process.on('unhandledRejection', (reason, promise) => {
-        console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-        shutdown();
-      });
-    }
+    // Catch unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+      shutdown();
+    });
 
-    
   } catch (error) {
     console.error("Error starting server:", error);
-    process.exit(1);
+    process.exit(1); // Exit the process if there's an error
   }
 };
 
