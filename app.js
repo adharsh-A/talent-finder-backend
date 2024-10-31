@@ -15,6 +15,7 @@ import clientRoutes from "./routes/clientRoutes.js";
 import jobRoutes from "./routes/jobRoutes.js";
 
 
+
 dotenv.config();
 
 const app = express();
@@ -66,6 +67,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/client", clientRoutes);
 app.use("/api/jobs", jobRoutes);
+
 
 // Error handling (404)
 app.use((req, res, next) => {

@@ -3,30 +3,97 @@ import User from "../models/user.js";
 import { Op } from "sequelize";
 import { Sequelize } from "sequelize";
 import JobApplication from "../models/job-application.js";
+
+
+import NodeCache from "node-cache";
+
+const cache = new NodeCache({ stdTTL: 3600 }); // TTL (time to live) in seconds
+
 export const getAllJobs = async (req, res) => {
+  const startTime = Date.now();
   const { page = 1, limit = 10 } = req.query;
   const skip = (page - 1) * limit;
+  const cacheKey = `jobs_page_${page}_limit_${limit}`;
 
   try {
-    // Get total count of jobs for pagination
-    const totalJobs = await Job.count();  
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      const endTime = Date.now();
+      const elapsedTime = endTime - startTime;
+      console.log(`Elapsed time: ${elapsedTime}ms`);
+      console.log("Returning cached data");
+      return res.json(cachedData);
+    }
 
-    // Get jobs with pagination
+    const totalJobs = await Job.count();
     const jobs = await Job.findAll({
       offset: skip,
       limit: Number(limit),
     });
 
-    res.status(200).json({
+    const endTime = Date.now();
+    const elapsedTime = endTime - startTime;
+    console.log(`Elapsed time: ${elapsedTime}ms`);
+
+    const responseData = {
       jobs,
       currentPage: Number(page),
       totalPages: Math.ceil(totalJobs / limit),
       totalJobs,
-    });
+    };
+
+    cache.set(cacheKey, responseData);
+    res.status(200).json(responseData);
   } catch (err) {
     res.status(500).json({ error: "Something went wrong", details: err });
   }
 };
+export const getJobsBySearch = async (req, res) => {
+  const { experience, skills, location, salary, title } = req.body;
+  const { page = 1, limit = 10 } = req.query;
+  const skip = (page - 1) * limit;
+  const cacheKey = `jobs_search_page_${page}_limit_${limit}_experience_${experience}_skills_${skills}_location_${location}_salary_${salary}_title_${title}`;
+  const startTime = Date.now();
+
+  try {
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) { 
+      const endTime = Date.now();
+      const elapsedTime = endTime - startTime;
+      console.log(`Elapsed time: ${elapsedTime}ms`);
+      console.log("Returning cached data");
+      return res.json(cachedData);
+    }
+
+    const jobs = await Job.findAll({
+      where: {
+        ...(experience && { experience }),
+        ...(skills && { skills: { [Op.contains]: [skills] } }),
+        ...(location && { location }),
+        ...(salary && { salary }),
+        ...(title && { title: { [Op.iLike]: `%${title}%` } }),
+      },
+      offset: skip,
+      limit: Number(limit),
+    });
+
+    const endTime = Date.now();
+    const elapsedTime = endTime - startTime;
+    console.log(`Elapsed time: ${elapsedTime}ms`);
+
+    const responseData = {
+      jobs,
+      currentPage: Number(page),
+      totalPages: Math.ceil(jobs.length / limit),
+      totalJobs: jobs.length,
+    };
+
+    cache.set(cacheKey, responseData);
+    res.status(200).json(responseData);
+  } catch (err) {
+    res.status(500).json({ error: "Something went wrong", details: err });
+  }
+}
 
 
 export const getJobById = async (req, res) => {
@@ -87,18 +154,29 @@ export const createJob = async (req, res) => {
 
 export const updateJob = async (req, res) => {
   try {
-    const job = await Job.update(req.body, {
-      where: { id: req.params.id },
-      returning: true,
-    });
-    if (!job[0]) {
+    // Find the existing job by ID
+    const job = await Job.findOne({ where: { id: req.params.id } });
+
+    // Check if the job exists
+    if (!job) {
       return res.status(404).json({ message: "Job not found" });
     }
-    res.status(200).json(job[1][0]);
+
+    // Update the job by merging existing data with new values from req.body
+    //only gets update the  firld which are provided
+    const updatedJob = await job.update({
+      ...job.toJSON(),  // Keep the current job data
+      ...req.body       // Override with new values from req.body
+    });
+
+    // Return the updated job
+    res.status(200).json(updatedJob);
   } catch (err) {
-    res.status(500).json(err);
+    console.error(err);  // Log the error for debugging
+    res.status(500).json({ error: "An error occurred while updating the job." });
   }
 };
+
 
 export const deleteJob = async (req, res) => {
   try {
@@ -200,9 +278,17 @@ export const getApplicationsByUserId = async (req, res) => {
           model: Job,
           as: 'job',
           attributes: { exclude: ['description'] },
+          include: [
+            {
+              model: User, // Assuming you have a Client model
+              as: 'client',   // Adjust this to the correct alias used in your associations
+              attributes: { exclude: ['password'] },
+            },
+          ],
         },
       ],
     });
+    
     res.status(200).json(applications);
   } catch (err) {
     console.log(err);
