@@ -43,6 +43,7 @@ export const getAllJobs = async (req, res) => {
     };
 
     cache.set(cacheKey, responseData);
+
     res.status(200).json(responseData);
   } catch (err) {
     res.status(500).json({ error: "Something went wrong", details: err });
@@ -193,7 +194,7 @@ export const applyJob = async (req, res) => {
   try {
     const { jobId } = req.params;  // Get jobId from URL parameters
     const userId = req.body.userId;    // Assuming you have user info in req.user from auth middleware
-
+    const io = req.app.get('io');
     // Check if job exists
     const job = await Job.findByPk(jobId);
     if (!job) {
@@ -222,11 +223,19 @@ export const applyJob = async (req, res) => {
 
     if (existingApplication) {
       console.log("already applied");
+      io.emit("notification", {
+        message: "You have already applied for this job",
+        type: "error"
+      });
       return res.status(409).json({
         success: false,
         message: "You have already applied for this job"
       });
     }
+    io.emit("notification", {
+      message: "You have successfully applied for this job",
+      type: "success"
+    });
 
     // Create new job application
     const jobApplication = await JobApplication.create({
@@ -238,7 +247,7 @@ export const applyJob = async (req, res) => {
     res.status(201).json({
       success: true,
       message: "Job application created successfully",
-      data: jobApplication
+      data: jobApplication  
     });
 
   } catch (error) {

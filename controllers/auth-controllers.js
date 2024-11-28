@@ -41,6 +41,8 @@ const fullName = firstname + " " + lastname;
       }
     );
     console.log("created");
+    const io = req.app.get('io');
+    io.emit('notification', { message: 'New user created!' });
     res.status(200).json({
       message: "User created successfully",
       token,
@@ -55,7 +57,7 @@ const fullName = firstname + " " + lastname;
 };
 export const login = async (req, res, next) => {
   const { username, password } = req.body;
-  console.log(username, password);
+  console.log(username);
 
   try {
     const existingUser = await User.findOne({ where:{username} });
@@ -80,7 +82,9 @@ export const login = async (req, res, next) => {
         expiresIn: "24h",
       }
     );
-    console.log(existingUser);
+    
+    const io = req.app.get('io');
+    io.emit('notification', { message: 'User logged in' });
     res.status(200).json({
       message: "successfully logged in",
       token,
