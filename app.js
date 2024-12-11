@@ -80,7 +80,8 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 app.disable("x-powered-by");
 app.use(helmet()); // Security middleware
-app.use(rateLimiter); // Rate limiting middleware
+//reminder: add rate limiter
+// app.use(rateLimiter); // Rate limiting middleware
 app.use(responseTimeLogger); // Response time logging middleware
 
 // CORS setup
